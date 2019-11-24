@@ -1,16 +1,5 @@
 from data_manager import ClutteredMNIST
-import matplotlib.pyplot as plt
-import numpy as np
 from model import STN, learn
-
-
-def plot_mnist_sample(mnist_sample):
-    mnist_sample = np.squeeze(mnist_sample)
-    plt.figure(figsize=(7, 7))
-    plt.imshow(mnist_sample, cmap='gray', interpolation='none')
-    plt.title('Cluttered MNIST sample', fontsize=20)
-    plt.axis('off')
-    plt.show()
 
 
 dataset_path = "./dataset/mnist_cluttered_60x60_6distortions.npz"

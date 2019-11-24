@@ -84,10 +84,8 @@ class STN:
                          tf.reshape(w01, [-1, out_h, out_w, 1]) * tf.reshape(y0x1, [-1, out_h, out_w, channels]),
                          tf.reshape(w11, [-1, out_h, out_w, 1]) * tf.reshape(y1x1, [-1, out_h, out_w, channels])])
 
-    def train(self, x_train, y_train, x_val, y_val):
-        # todo: epochs, batch_size, time, etc...
-        epochs = 50
-        batch_size = 128
+    def train(self, x_train, y_train, x_val, y_val, epochs, batch_size):
+        # todo: timing, etc...
         for e in range(epochs):
             print(f"========epoch: {e}=======")
             s = 0
@@ -97,10 +95,9 @@ class STN:
                                                            self.label_ph: y_train[s:s + batch_size]})
                 s += batch_size
                 progressbar_print(s, len(x_train), "[Train] loss: %.4f, acc: %.4f" % (loss, acc))
-            self.evaluate(x_val, y_val)
+            self.evaluate(x_val, y_val, 256)
 
-    def evaluate(self, x_val, y_val):
-        batch_size = 256
+    def evaluate(self, x_val, y_val, batch_size):
         s = 0
         while s < len(x_val):
             loss, acc = self.session.run([self.loss, self.accuracy], feed_dict={self.input_ph: x_val[s:s + batch_size],
@@ -110,4 +107,4 @@ class STN:
 
 
 def learn(model, x_train, y_train, x_val, y_val):
-    model.train(x_train, y_train, x_val, y_val)
+    model.train(x_train, y_train, x_val, y_val, 50, 128)

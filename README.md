@@ -1,7 +1,7 @@
 # Spatial Transformer
 
 ## introduction
-Just another implement with Tensorflow for paper `Spatial Transformer Netrworks`.
+Just another implementation with Tensorflow for paper `Spatial Transformer Netrworks`.
 
 
 ## references
