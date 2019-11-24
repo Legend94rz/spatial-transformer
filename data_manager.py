@@ -2,11 +2,11 @@ import numpy as np
 
 
 class ClutteredMNIST(object):
-
     def __init__(self, dataset_path):
         self.dataset_path = dataset_path
 
-    def to_categorical(self, y, num_classes=None):
+    @staticmethod
+    def to_categorical(y, num_classes=None):
         y = np.array(y, dtype='int').ravel()
         if not num_classes:
             num_classes = np.max(y) + 1
@@ -36,4 +36,4 @@ class ClutteredMNIST(object):
         y_test = self.to_categorical(y_test, num_classes)
         test_data = (x_test, y_test)
 
-        return(train_data, val_data, test_data)
+        return train_data, val_data, test_data
