@@ -22,4 +22,4 @@ train_data, val_data, test_data = data_manager.load()
 x_train, y_train = train_data
 
 print(x_train.shape, y_train.shape)
-learn(STN(), x_train, y_train, val_data[0], val_data[1])
+learn(STN(input_shape=(60, 60, 1), num_classes=10), x_train, y_train, val_data[0], val_data[1])

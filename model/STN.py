@@ -1,39 +1,33 @@
 import tensorflow as tf
 from .layers import conv2d, flatten, fully_connected
 from .metrics import categorical_accuracy
-from .utils import progressbar_print, get_session
+from .utils import progressbar_print, get_session, initilize as tf_initialize
 
 
-# todo: 现在这个写法不能重入
 class STN:
-    def __init__(self, input_shape=(60, 60, 1), sampling_size=None, num_classes=10):
-        # todo: support multiple type transform
+    def __init__(self, input_shape, num_classes, sampling_size=None):
+        self.session = get_session()
         if sampling_size is None:
             sampling_size = (input_shape[0], input_shape[1])
         self.input_ph = tf.placeholder(tf.float32, shape=(None, *input_shape))
         self.label_ph = tf.placeholder(tf.float32, shape=(None, num_classes))
         locnet = flatten(self.input_ph)
-        locnet = tf.nn.relu(fully_connected(locnet, "locnet/fc1", 20))
-        affine_mat = tf.tanh(fully_connected(locnet, "locnet/aff", 6, kernel_initializer=tf.initializers.zeros,
-                                             bias_initializer=[1.0, 0, 0, 0, 1, 0]))
+        locnet = fully_connected(locnet, "fc1", 20, activation=tf.nn.relu)
+        affine_mat = fully_connected(locnet, "aff", 6, kernel_initializer=tf.initializers.zeros,
+                                     bias_initializer=[1.0, 0, 0, 0, 1, 0], activation=tf.tanh)
         x = self.spatial_trans(self.input_ph, affine_mat, sampling_size, input_shape[-1])
-        x = tf.nn.relu(conv2d(x, (3, 3, 1, 32), "aff/conv1", padding='SAME'))
+        x = conv2d(x, (3, 3, 1, 32), "conv1", padding='SAME', activation=tf.nn.relu)
         x = tf.nn.max_pool2d(x, ksize=(2, 2), strides=(2, 2), padding="SAME")
-        x = tf.nn.relu(conv2d(x, (3, 3, 32, 32), "aff/conv2", padding='SAME'))
+        x = conv2d(x, (3, 3, 32, 32), "conv2", padding='SAME', activation=tf.nn.relu)
         x = tf.nn.max_pool2d(x, ksize=(2, 2), strides=(2, 2), padding="SAME")
         x = flatten(x)
-        x = fully_connected(x, "aff/fc", 256)
-        x = tf.nn.relu(x)
-        self.logits = fully_connected(x, "fc", num_classes)
+        x = fully_connected(x, "fc2", 256, activation=tf.nn.relu)
+        self.logits = fully_connected(x, "fc3", num_classes)
         self.loss = tf.losses.softmax_cross_entropy(self.label_ph, self.logits)
         self.train_op = tf.train.AdamOptimizer().minimize(self.loss)
         self.accuracy = categorical_accuracy(self.label_ph, self.logits)
         self.output = tf.argmax(tf.nn.softmax(self.logits, axis=-1), axis=-1)
-
-        # todo: exclude already initialized params
-        self.session = get_session()
-        self.session.run(tf.global_variables_initializer())
-        # self.session.run(tf.local_variables_initializer())
+        tf_initialize()
 
     @staticmethod
     def spatial_trans(feature_map, affine_mat, output_size, channels):
@@ -85,7 +79,6 @@ class STN:
         w01 = (x - x0) * (y1 - y)
         w11 = (x - x0) * (y - y0)  # [None, HW]
 
-        # tf.reshape(y0x0, [-1, out_h, out_w, channels])
         return tf.add_n([tf.reshape(w00, [-1, out_h, out_w, 1]) * tf.reshape(y0x0, [-1, out_h, out_w, channels]),
                          tf.reshape(w10, [-1, out_h, out_w, 1]) * tf.reshape(y1x0, [-1, out_h, out_w, channels]),
                          tf.reshape(w01, [-1, out_h, out_w, 1]) * tf.reshape(y0x1, [-1, out_h, out_w, channels]),
