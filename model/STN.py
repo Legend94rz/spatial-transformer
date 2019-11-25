@@ -1,12 +1,13 @@
 import tensorflow as tf
 from .layers import conv2d, flatten, fully_connected
 from .metrics import categorical_accuracy
-from .utils import progressbar_print, get_session, initilize as tf_initialize
+from .utils import progressbar_print, get_session, initialize as tf_initialize
+tf.logging.set_verbosity(tf.logging.ERROR)
 
 
 class STN:
     def __init__(self, input_shape, num_classes, sampling_size=None):
-        self.session = get_session()
+        self.session = get_session(debug=False)
         if sampling_size is None:
             sampling_size = (input_shape[0], input_shape[1])
         self.input_ph = tf.placeholder(tf.float32, shape=(None, *input_shape))
